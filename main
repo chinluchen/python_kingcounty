@@ -1,0 +1,233 @@
+#安裝contextily檔案
+pip install contextily
+
+#讀取資料，並下載相關資料庫
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 讀取 CSV 檔案，同時將 'id' 列讀取為字符串類型
+df = pd.read_csv("HW1_house_data.csv", dtype={'id': str})
+
+# 確保 'id' 資料前方位數不會丟失，補齊前導零（假設 id 應該是10位數）
+df['id'] = df['id'].str.zfill(10)
+
+# 顯示前20筆資料
+first_20_rows = df.head(20)
+print("前20筆資料:")
+print(first_20_rows)
+
+# 判斷特徵種類
+feature_types = df.dtypes
+print("\n特徵種類:")
+print(feature_types)
+
+#檢查各欄位是否有缺失值
+df.isnull().sum()
+
+# 检查重复行的数量
+num_duplicates = df.duplicated().sum()
+print(f"Number of duplicate rows: {num_duplicates}")
+
+# 填充數字列中的缺失值
+numeric_cols = df.select_dtypes(include=[np.number]).columns
+df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].median())
+
+# 計算特徵price之中位數、平均數、眾數與峰度、偏度
+# 計算集中趨勢測量
+mean_price = df['price'].mean()
+median_price = df['price'].median()
+mode_price = df['price'].mode()[0]
+
+# 繪製包含平均數、中位數和眾數的直方圖
+plt.figure(figsize=(12, 8))
+sns.histplot(df['price'].replace([np.inf, -np.inf], np.nan).dropna(), bins=50, kde=True)
+
+# 計算偏度和峰度
+price_skewness = df['price'].skew()
+price_kurtosis = df['price'].kurt()
+
+print(f"Skewness of Price: {price_skewness}")
+print(f"Kurtosis of Price: {price_kurtosis}")
+
+# 繪製平均數、中位數和眾數
+plt.axvline(mean_price, color='r', linestyle='--', label=f'Mean: {mean_price:.2f}')
+plt.axvline(median_price, color='g', linestyle='-', label=f'Median: {median_price:.2f}')
+plt.axvline(mode_price, color='b', linestyle='-', label=f'Mode: {mode_price:.2f}')
+
+plt.xlabel('Price')
+plt.ylabel('Frequency')
+plt.title(f'Histogram of House Prices\nSkewness: {price_skewness:.2f}, Kurtosis: {price_kurtosis:.2f}')
+plt.legend()
+
+# 保存圖表
+plt.savefig('histogram_with_statistics.png')
+plt.show()
+
+print("圖表已保存為 'histogram_with_statistics.png'。")
+
+# 計算盒須圖數據
+price = df['price']
+Q1 = price.quantile(0.25)
+Q3 = price.quantile(0.75)
+IQR = Q3 - Q1
+median = price.median()
+min_val = price.min()
+max_val = price.max()
+
+# 判斷異常值的範圍
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+# 計算實際盒須圖數據
+min_whisker = price[price >= lower_bound].min()
+max_whisker = price[price <= upper_bound].max()
+outliers = price[(price < lower_bound) | (price > upper_bound)]
+
+# 打印盒須圖數據
+print(f"Minimum Value: {min_val}")
+print(f"First Quartile (Q1): {Q1}")
+print(f"Median: {median}")
+print(f"Third Quartile (Q3): {Q3}")
+print(f"Maximum Value: {max_val}")
+print(f"Interquartile Range (IQR): {IQR}")
+print(f"Lower Bound for Outliers: {lower_bound}")
+print(f"Upper Bound for Outliers: {upper_bound}")
+print(f"Min Whisker: {min_whisker}")
+print(f"Max Whisker: {max_whisker}")
+print(f"Outliers: {outliers.values}")
+
+# 繪製盒須圖
+plt.figure(figsize=(12, 8))
+sns.boxplot(y=price)
+plt.ylabel('Price')
+plt.title('Box Plot of House Prices')
+plt.savefig('Box Plot of House Prices.png')
+plt.show()
+
+# 其他特徵描述性統計分析
+# 獲取描述性統計信息
+desc_stats = df.describe()
+
+# 計算集中趨勢測量
+mean_price = df['price'].mean()
+median_price = df['price'].median()
+mode_price = df['price'].mode()[0]
+
+# 計算離散程度測量
+range_price = df['price'].max() - df['price'].min()
+iqr_price = df['price'].quantile(0.75) - df['price'].quantile(0.25)
+variance_price = df['price'].var()
+std_dev_price = df['price'].std()
+
+# 計算分佈測量
+skewness_price = df['price'].skew()
+kurtosis_price = df['price'].kurt()
+
+# 頻率分佈
+price_counts = df['price'].value_counts()
+
+# 其他統計量
+min_price = df['price'].min()
+max_price = df['price'].max()
+sum_price = df['price'].sum()
+count_price = df['price'].count()
+
+# 打印結果
+print("描述性統計信息：")
+print(desc_stats)
+
+print("\n集中趨勢測量：")
+print(f"均值 (Mean) of Price: {mean_price}")
+print(f"中位數 (Median) of Price: {median_price}")
+print(f"眾數 (Mode) of Price: {mode_price}")
+
+print("\n離散程度測量：")
+print(f"範圍 (Range) of Price: {range_price}")
+print(f"四分位距 (IQR) of Price: {iqr_price}")
+print(f"方差 (Variance) of Price: {variance_price}")
+print(f"標準差 (Standard Deviation) of Price: {std_dev_price}")
+
+print("\n分佈測量：")
+print(f"偏度 (Skewness) of Price: {skewness_price}")
+print(f"峰度 (Kurtosis) of Price: {kurtosis_price}")
+
+print("\n頻率分佈 (Frequency Distribution) of Price：")
+print(price_counts)
+
+print("\n其他統計量：")
+print(f"最小值 (Minimum) of Price: {min_price}")
+print(f"最大值 (Maximum) of Price: {max_price}")
+print(f"總和 (Sum) of Price: {sum_price}")
+print(f"計數 (Count) of Price: {count_price}")
+
+# 視覺化圖表
+
+# 1. 散點圖
+plt.figure(figsize=(12, 8))
+plt.scatter(df['sqft_living'], df['price'], alpha=0.5)
+plt.xlabel('Square Foot Living')
+plt.ylabel('Price')
+plt.title('Scatter Plot of Price vs Square Foot Living')
+plt.savefig('Scatter Plot of Price vs Square Foot Living')
+plt.show()
+
+# 2. 小提琴圖
+plt.figure(figsize=(12, 8))
+sns.violinplot(x='grade', y='price', data=df, palette='muted')
+plt.xlabel('Grade')
+plt.ylabel('Price')
+plt.title('Violin Plot of Price by Grade')
+plt.savefig('Violin Plot of Price by Grade')
+plt.show()
+
+# 3. 點圖
+plt.figure(figsize=(12, 8))
+sns.stripplot(x='grade', y='price', data=df, jitter=True, palette='muted')
+plt.xlabel('Grade')
+plt.ylabel('Price')
+plt.title('Strip Plot of Price by Grade')
+plt.savefig('Strip Plot of Price by Grade')
+plt.show()
+
+# 繪製熱度圖
+# 計算相關性矩陣
+correlation_matrix = df.corr()
+
+# 找出相關性最高的六個特徵對
+corr_pairs = correlation_matrix.unstack()
+sorted_pairs = corr_pairs.sort_values(kind="quicksort", key=lambda x: -abs(x))
+top_pairs = sorted_pairs[sorted_pairs != 1].nlargest(6)
+
+# 繪製熱度圖
+plt.figure(figsize=(14, 10))
+heatmap = sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5, linecolor='black')
+
+# 標出相關性最高的三個特徵對
+for (feature1, feature2), value in top_pairs.items():
+    plt.text(correlation_matrix.columns.get_loc(feature2) + 0.5, 
+             correlation_matrix.index.get_loc(feature1) + 0.5, 
+             f'{value:.2f}', 
+             color='black', 
+             ha='center', 
+             va='center', 
+             fontsize=12, 
+             fontweight='bold', 
+             bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.3'))
+
+# 設置標題和軸標籤
+plt.title('Correlation Heatmap', fontsize=16)
+plt.xticks(rotation=45)
+plt.yticks(rotation=0)
+plt.tight_layout()
+
+# 保存圖表為 PNG 文件
+plt.savefig('correlation_heatmap.png', bbox_inches='tight')
+
+# 顯示圖表
+plt.show()
+
+# 列印相關性最高的三個特徵對及其相關係數
+print("相關性最高的三個特徵對及其相關係數：")
+print(top_pairs)
